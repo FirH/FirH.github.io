@@ -17,7 +17,7 @@ selected_papers: true # includes a list of papers marked as "selected={true}"
 social: true # includes social icons at the bottom of the page
 ---
 
-I'm Firhan, a second year masters student at Brawijaya University I spend my time mainly on researching AI architectures and methods, particularly in **Natural Language Processing** and **Low Resource Deep Learning Models**.
+I'm Firhan, a second year fast track master's student at Brawijaya University I spend my time mainly on researching AI architectures and methods, particularly in **Natural Language Processing** and **Low Resource Deep Learning Models**.
 
 I don't stop at thinking multiple scenarios, solutions, and possibilities. **I dive head first to experiment them myself**, mostly because the addictive nature of discovery and the learning process.
 
