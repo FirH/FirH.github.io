@@ -1,7 +1,7 @@
 ---
 layout: page
-title: project 1
-description: with background image
+title: Nusa Insight
+description: University Dedicated AI-based Student Social Media Content Monitoring for Decision Making
 img: assets/img/12.jpg
 importance: 1
 category: work
