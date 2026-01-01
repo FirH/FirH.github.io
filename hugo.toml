@@ -1,7 +1,7 @@
-baseURL: "https://FirH.github.io/"
-languageCode: "en-us"
-title: "FirH's Blog"
-theme: "PaperMod"
+baseURL = "https://FirH.github.io/"
+languageCode = "en-us"
+title = "FirH's Blog"
+theme = "PaperMod"
 [caches]
   [caches.images]
     dir = ':cacheDir/images'
