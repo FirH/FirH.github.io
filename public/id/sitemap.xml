@@ -2,40 +2,40 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/id/categories/</loc>
+    <loc>https://FirH.github.io/id/categories/</loc>
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
-                href="http://localhost:1313/categories/"
+                href="https://FirH.github.io/categories/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="id"
-                href="http://localhost:1313/id/categories/"
+                href="https://FirH.github.io/id/categories/"
                 />
   </url><url>
-    <loc>http://localhost:1313/id/</loc>
+    <loc>https://FirH.github.io/id/</loc>
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
-                href="http://localhost:1313/"
+                href="https://FirH.github.io/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="id"
-                href="http://localhost:1313/id/"
+                href="https://FirH.github.io/id/"
                 />
   </url><url>
-    <loc>http://localhost:1313/id/tags/</loc>
+    <loc>https://FirH.github.io/id/tags/</loc>
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
-                href="http://localhost:1313/tags/"
+                href="https://FirH.github.io/tags/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="id"
-                href="http://localhost:1313/id/tags/"
+                href="https://FirH.github.io/id/tags/"
                 />
   </url>
 </urlset>
