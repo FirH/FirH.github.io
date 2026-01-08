@@ -1,4 +1,8 @@
 en:
   languageCode: en
+  languageName: English
+  weight: 1
 id:
   languageCode: id
+  languageName: Indonesian
+  weight: 2

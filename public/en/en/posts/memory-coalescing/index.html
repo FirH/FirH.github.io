@@ -11,7 +11,7 @@
 Introduction
 In the age of large language models and retrieval-augmented generation (RAG), similarity search has become a fundamental operation. Whether you&rsquo;re building a semantic search engine, a recommendation system, or a RAG pipeline, you&rsquo;ll often need to find the most similar vectors from a large database given a query vector. But what happens when your database contains millions of vectors? Performance becomes critical.">
 <meta name="author" content="">
-<link rel="canonical" href="http://localhost:1313/posts/en/posts/memory-coalescing/">
+<link rel="canonical" href="http://localhost:1313/en/en/posts/memory-coalescing/">
 <link crossorigin="anonymous" href="/assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
 <link rel="icon" href="http://localhost:1313/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
@@ -20,7 +20,7 @@ In the age of large language models and retrieval-augmented generation (RAG), si
 <link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/en/posts/memory-coalescing/">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/en/en/posts/memory-coalescing/">
 <noscript>
     <style>
         #theme-toggle,
@@ -78,7 +78,7 @@ In the age of large language models and retrieval-augmented generation (RAG), si
     <header class="header">
     <nav class="nav">
         <div class="logo">
-            <a href="http://localhost:1313/" accesskey="h" title="FirH&#39;s Blog (Alt + H)">FirH&#39;s Blog</a>
+            <a href="http://localhost:1313/en/" accesskey="h" title="FirH&#39;s Blog (Alt + H)">FirH&#39;s Blog</a>
             <div class="logo-switches">
                 <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
                     <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
@@ -102,8 +102,8 @@ In the age of large language models and retrieval-augmented generation (RAG), si
                 </button>
                     <ul class="lang-switch"><li>|</li>
                         <li>
-                            <a href="http://localhost:1313/id/" title="Id"
-                                aria-label="Id">Id</a>
+                            <a href="http://localhost:1313/id/" title="Indonesian"
+                                aria-label="Indonesian">Id</a>
                         </li>
                     </ul>
             </div>
@@ -119,12 +119,6 @@ In the age of large language models and retrieval-augmented generation (RAG), si
     
     <h1 class="post-title entry-hint-parent">
       Memory Coalescing
-      <span class="entry-hint" title="Draft">
-        <svg xmlns="http://www.w3.org/2000/svg" height="35" viewBox="0 -960 960 960" fill="currentColor">
-          <path
-            d="M160-410v-60h300v60H160Zm0-165v-60h470v60H160Zm0-165v-60h470v60H160Zm360 580v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q9 9 13 20t4 22q0 11-4.5 22.5T862.09-380L643-160H520Zm300-263-37-37 37 37ZM580-220h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z" />
-        </svg>
-      </span>
     </h1>
     <div class="post-meta"><span title='2026-01-02 08:50:21 +0700 WIB'>January 2, 2026</span>
 
@@ -133,9 +127,9 @@ In the age of large language models and retrieval-augmented generation (RAG), si
   <div class="post-content"><h1 id="accelerating-similarity-search-with-memory-coalescing-and-shared-memory">Accelerating Similarity Search with Memory Coalescing and Shared Memory<a hidden class="anchor" aria-hidden="true" href="#accelerating-similarity-search-with-memory-coalescing-and-shared-memory">#</a></h1>
 <h2 id="introduction">Introduction<a hidden class="anchor" aria-hidden="true" href="#introduction">#</a></h2>
 <p>In the age of large language models and retrieval-augmented generation (RAG), similarity search has become a fundamental operation. Whether you&rsquo;re building a semantic search engine, a recommendation system, or a RAG pipeline, you&rsquo;ll often need to find the most similar vectors from a large database given a query vector. But what happens when your database contains millions of vectors? Performance becomes critical.</p>
-<p>In this article, we&rsquo;ll explore how GPU optimization techniques such as memory coalescing and shared memory accelerate similarity search operations. We&rsquo;ll walk through CUDA implementations, demonstrate the performance gains, and explain exactly why these optimizations work.</p>
-<h2 id="the-problem-similarity-search-at-scale">The Problem: Similarity Search at Scale<a hidden class="anchor" aria-hidden="true" href="#the-problem-similarity-search-at-scale">#</a></h2>
-<p>Similarity search is the task of finding the most similar items in a database to a given query. In the context of vector embeddings, this typically means computing a similarity metric (like dot product or cosine similarity) between a query vector and millions of database vectors, then finding the highest-scoring matches.</p>
+<p>In this article, i will demonsrate how GPU optimization techniques such as memory coalescing and shared memory accelerate similarity search operations. We&rsquo;ll walk through CUDA implementations, demonstrate the performance gains, and explain exactly why these optimizations work.</p>
+<h2 id="similarity-search-at-scale">Similarity Search at Scale<a hidden class="anchor" aria-hidden="true" href="#similarity-search-at-scale">#</a></h2>
+<p>Similarity search is the task of finding the most similar items in a database to a given query. In the context of vector embeddings, this typically means computing a similarity metric between a query vector and millions of database vectors, then finding the highest-scoring matches.</p>
 <p>Consider a typical RAG application: when a user asks a question, you need to:</p>
 <ol>
 <li>Convert the question to a vector embedding</li>
@@ -143,21 +137,21 @@ In the age of large language models and retrieval-augmented generation (RAG), si
 <li>Retrieve the top-k most relevant documents</li>
 <li>Feed them to your language model</li>
 </ol>
-<p>The second step—computing similarity against millions of vectors—can easily become a bottleneck. On a CPU, processing 10,000 queries against 1 million database vectors (each with 128 dimensions) involves roughly 1.28 billion dot products. Even with modern CPUs, this can take seconds or even minutes.</p>
-<p>This is where GPUs shine. With thousands of parallel cores, GPUs can compute many dot products simultaneously. However, simply moving your code to a GPU isn&rsquo;t enough—you need to optimize memory access patterns to unlock the full potential of GPU hardware.</p>
+<p>Computing similarity against millions of vectors can easily become a bottleneck. On a CPU, processing 10,000 queries against 1 million database vectors (each with 128 dimensions) involves roughly 1.28 billion dot products.</p>
+<p>GPUs in other hand, has parallel cores that can be used to compute many dot products simultaneously with it&rsquo;s parallel cores. However, we still need to implement try the memory access patterns optimization in order to utilize said capability. The techniques implemented in this blog are memory coalescing and shared memory.</p>
 <h2 id="experimental-setup">Experimental Setup<a hidden class="anchor" aria-hidden="true" href="#experimental-setup">#</a></h2>
-<p>Before diving into the code, let&rsquo;s establish our experimental environment:</p>
 <p><strong>Hardware:</strong></p>
 <ul>
-<li>NVIDIA GPU (CUDA-capable)</li>
-<li>System memory: Sufficient for ~550MB dataset</li>
+<li>GPU: NVIDIA GeForce RTX 4070 Laptop GPU</li>
+<li>CPU: 13th Gen Intel(R) Core(TM) i9-13900HX</li>
+<li>RAM: 32 GB</li>
 </ul>
 <p><strong>Software:</strong></p>
 <ul>
-<li>Python 3.x</li>
-<li>CUDA Toolkit</li>
-<li>Numba (for CUDA JIT compilation)</li>
-<li>NumPy</li>
+<li>Python 3.11.13</li>
+<li>Nvidia Nsight Systems</li>
+<li>Numba 0.63.1</li>
+<li>NumPy 2.3.5</li>
 </ul>
 <p><strong>Dataset:</strong>
 We&rsquo;ll use the SIFT1M dataset, a standard benchmark in the similarity search community:</p>
@@ -168,8 +162,7 @@ We&rsquo;ll use the SIFT1M dataset, a standard benchmark in the similarity searc
 <li><strong>Total size</strong>: ~550 MB</li>
 <li><strong>Similarity metric</strong>: Dot product (higher values indicate greater similarity)</li>
 </ul>
-<p>The SIFT1M dataset represents real-world feature descriptors from images, making it an excellent benchmark for similarity search algorithms.</p>
-<h2 id="the-naive-gpu-implementation">The Naive GPU Implementation<a hidden class="anchor" aria-hidden="true" href="#the-naive-gpu-implementation">#</a></h2>
+<h2 id="naive-gpu-implementation">Naive GPU Implementation<a hidden class="anchor" aria-hidden="true" href="#naive-gpu-implementation">#</a></h2>
 <p>Let&rsquo;s start with a straightforward GPU implementation. Each thread processes one query, computing its similarity against all database vectors:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> numpy <span style="color:#66d9ef">as</span> np
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> numba
@@ -197,72 +190,31 @@ We&rsquo;ll use the SIFT1M dataset, a standard benchmark in the similarity searc
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>        results[query_idx, <span style="color:#ae81ff">0</span>] <span style="color:#f92672">=</span> best_idx
 </span></span><span style="display:flex;"><span>        results[query_idx, <span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> best_sim
-</span></span></code></pre></div><p>This implementation is straightforward:</p>
-<ol>
+</span></span></code></pre></div><ol>
 <li>Each thread is assigned one query via <code>cuda.grid(1)</code></li>
-<li>For each query, we iterate through all database vectors</li>
-<li>For each database vector, we compute the dot product</li>
-<li>We track the best similarity score and its index</li>
-<li>Finally, we store the results</li>
+<li>For each query, iterate through all database vectors</li>
+<li>For each database vector, compute the dot product</li>
+<li>Track the best similarity score and its index</li>
+<li>Store the results</li>
 </ol>
-<h3 id="benchmark-results-non-coalesced-version">Benchmark Results: Non-Coalesced Version<a hidden class="anchor" aria-hidden="true" href="#benchmark-results-non-coalesced-version">#</a></h3>
-<p>When we run this implementation on the SIFT1M dataset, we get baseline performance metrics. While the exact numbers vary by GPU model, a typical result might look like:</p>
-<pre tabindex="0"><code>NON-COALESCED (Baseline)
-  Memory access: queries[query_idx, feat] * database[db_idx, feat]
-  Issue: Each thread accesses different rows (not coalesced)
-
-  Time: ~150-200 ms
-  Throughput: ~50,000-67,000 queries/sec
-</code></pre><p>This seems fast at first glance—tens of thousands of queries per second! However, we&rsquo;re leaving significant performance on the table. The problem lies in how we&rsquo;re accessing memory.</p>
+<p>Before doing the benchmark and optimizing the access patterns, we will need to understand Memory Coalescing and Shared Memory.</p>
 <h2 id="understanding-memory-coalescing">Understanding Memory Coalescing<a hidden class="anchor" aria-hidden="true" href="#understanding-memory-coalescing">#</a></h2>
-<p>To understand why the naive implementation is slow, we need to understand how GPU memory works.</p>
 <h3 id="the-gpu-memory-hierarchy">The GPU Memory Hierarchy<a hidden class="anchor" aria-hidden="true" href="#the-gpu-memory-hierarchy">#</a></h3>
 <p>GPUs have multiple levels of memory:</p>
 <ul>
-<li><strong>Global memory</strong>: Large (GBs) but slow (~400-800 cycles latency)</li>
-<li><strong>Shared memory</strong>: Small (48-164 KB per block) but very fast (~20-30 cycles latency)</li>
-<li><strong>Registers</strong>: Tiny but extremely fast (~1 cycle latency)</li>
+<li><strong>Global memory</strong>: Largest and most abundant memory available (GBs), but slowest to access</li>
+<li><strong>Shared memory</strong>: On-chip memory with much faster speed than global memory</li>
+<li><strong>Registers</strong>: Fastest memory type located on the Streaming Multiprocessor</li>
 </ul>
-<p>The key insight is that accessing global memory is expensive. However, GPUs have a clever optimization: when threads in a warp (a group of 32 threads that execute in lockstep) access consecutive memory addresses, the hardware can coalesce multiple memory requests into a single transaction.</p>
+<p>Accessing global memory can be an expensive operation, but when threads in a warp (a group of 32 threads that execute in lockstep) access consecutive memory addresses, the hardware can coalesce multiple memory requests into a single transaction.</p>
 <h3 id="what-is-memory-coalescing">What is Memory Coalescing?<a hidden class="anchor" aria-hidden="true" href="#what-is-memory-coalescing">#</a></h3>
 <p>Memory coalescing occurs when adjacent threads access adjacent memory locations. Instead of issuing 32 separate memory requests, the GPU can issue a single request that fetches all required data in one transaction.</p>
-<p>Consider this example:</p>
-<pre tabindex="0"><code>Coalesced access:
-Thread 0 reads address 0
-Thread 1 reads address 4
-Thread 2 reads address 8
-Thread 3 reads address 12
-→ GPU combines into ONE memory transaction
-
-Non-coalesced access:
-Thread 0 reads address 0
-Thread 1 reads address 128
-Thread 2 reads address 256
-Thread 3 reads address 384
-→ GPU must perform FOUR separate memory transactions
-</code></pre><p>In our naive implementation, look at the critical line:</p>
+<p>Let&rsquo;s take a look at this line in the naive implementation:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>sim <span style="color:#f92672">+=</span> queries[query_idx, feat_idx] <span style="color:#f92672">*</span> database[db_idx, feat_idx]
-</span></span></code></pre></div><p>The problem is <code>database[db_idx, feat_idx]</code>:</p>
-<ul>
-<li>Thread 0 processes query 0 and accesses <code>database[0, 0], database[1, 0], database[2, 0], ...</code></li>
-<li>Thread 1 processes query 1 and accesses <code>database[0, 0], database[1, 0], database[2, 0], ...</code></li>
-<li>All threads access the same memory locations!</li>
-</ul>
-<p>Wait—that sounds like it might be coalesced, right? Unfortunately, no. The issue is more subtle. While threads access the same <code>db_idx</code> at the same time, the memory layout of a row-major array means that <code>database[db_idx, feat_idx]</code> and <code>database[db_idx, feat_idx+1]</code> are consecutive in memory, but <code>database[db_idx, feat_idx]</code> and <code>database[db_idx+1, feat_idx]</code> are far apart (separated by the entire row width of 128 floats).</p>
+</span></span></code></pre></div><p>While threads access the same <code>db_idx</code> at the same time, the memory layout of a row-major array means that <code>database[db_idx, feat_idx]</code> and <code>database[db_idx, feat_idx+1]</code> are consecutive in memory, but <code>database[db_idx, feat_idx]</code> and <code>database[db_idx+1, feat_idx]</code> are far apart (separated by the entire row width of 128 floats).</p>
 <h2 id="understanding-shared-memory">Understanding Shared Memory<a hidden class="anchor" aria-hidden="true" href="#understanding-shared-memory">#</a></h2>
-<p>Beyond memory coalescing, GPUs offer another powerful optimization: shared memory.</p>
-<p>Shared memory is a programmable cache that&rsquo;s shared among all threads in a block. It has two key properties:</p>
-<ol>
-<li><strong>Speed</strong>: It&rsquo;s roughly 100x faster than global memory</li>
-<li><strong>Scope</strong>: All threads in a block can read/write to shared memory and coordinate their work</li>
-</ol>
-<p>Shared memory is perfect for:</p>
-<ul>
-<li>Storing intermediate results that multiple threads need to access</li>
-<li>Implementing parallel reduction algorithms</li>
-<li>Coordinating work between threads in a block</li>
-</ul>
-<p>In our similarity search, we can use shared memory to:</p>
+<p>Shared memory is a memory space accessible by all threads within a single thread block stored on L1 Data Cache of GPU&rsquo;s SM.</p>
+<p>In similarity search, we can use shared memory to:</p>
 <ol>
 <li>Store partial results from each thread</li>
 <li>Perform a parallel reduction to find the maximum similarity</li>
@@ -321,69 +273,40 @@ Thread 3 reads address 384
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> thread_idx <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:
 </span></span><span style="display:flex;"><span>        results[query_idx, <span style="color:#ae81ff">0</span>] <span style="color:#f92672">=</span> shared_best_idx[<span style="color:#ae81ff">0</span>]
 </span></span><span style="display:flex;"><span>        results[query_idx, <span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> shared_best_sim[<span style="color:#ae81ff">0</span>]
-</span></span></code></pre></div><h2 id="key-differences-between-the-two-implementations">Key Differences Between the Two Implementations<a hidden class="anchor" aria-hidden="true" href="#key-differences-between-the-two-implementations">#</a></h2>
-<p>Let&rsquo;s break down the crucial differences between the naive and optimized versions:</p>
+</span></span></code></pre></div><h2 id="differences-between-the-two-implementations">Differences Between the Two Implementations<a hidden class="anchor" aria-hidden="true" href="#differences-between-the-two-implementations">#</a></h2>
 <h3 id="1-thread-organization">1. Thread Organization<a hidden class="anchor" aria-hidden="true" href="#1-thread-organization">#</a></h3>
 <p><strong>Non-coalesced:</strong></p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>query_idx <span style="color:#f92672">=</span> cuda<span style="color:#f92672">.</span>grid(<span style="color:#ae81ff">1</span>)  <span style="color:#75715e"># Each thread = one query</span>
 </span></span></code></pre></div><p><strong>Coalesced:</strong></p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>query_idx <span style="color:#f92672">=</span> cuda<span style="color:#f92672">.</span>blockIdx<span style="color:#f92672">.</span>x   <span style="color:#75715e"># Each block = one query</span>
 </span></span><span style="display:flex;"><span>thread_idx <span style="color:#f92672">=</span> cuda<span style="color:#f92672">.</span>threadIdx<span style="color:#f92672">.</span>x  <span style="color:#75715e"># Threads cooperate on one query</span>
-</span></span></code></pre></div><p>In the optimized version, we use an entire block of threads (256 threads) to process a single query. This allows threads to work together, dividing the database vectors among themselves.</p>
-<h3 id="2-database-layout">2. Database Layout<a hidden class="anchor" aria-hidden="true" href="#2-database-layout">#</a></h3>
-<p><strong>Non-coalesced:</strong></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>database[db_idx, feat_idx]  <span style="color:#75715e"># Shape: (n_vectors, dim)</span>
-</span></span></code></pre></div><p><strong>Coalesced:</strong></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>database_T[feat_idx, db_idx]  <span style="color:#75715e"># Shape: (dim, n_vectors)</span>
-</span></span></code></pre></div><p>The key insight: we transpose the database! By storing it as <code>(dim, n_vectors)</code> instead of <code>(n_vectors, dim)</code>, we ensure that when adjacent threads access <code>database_T[feat_idx, 0]</code>, <code>database_T[feat_idx, 1]</code>, <code>database_T[feat_idx, 2]</code>, etc., they&rsquo;re accessing consecutive memory locations.</p>
-<h3 id="3-work-distribution">3. Work Distribution<a hidden class="anchor" aria-hidden="true" href="#3-work-distribution">#</a></h3>
+</span></span></code></pre></div><p>In the optimized version, we use an entire block of threads (256 threads) to process a single query. This allows threads to divide the database vectors among themselves.</p>
+<h3 id="2-work-distribution">2. Work Distribution<a hidden class="anchor" aria-hidden="true" href="#2-work-distribution">#</a></h3>
 <p><strong>Non-coalesced:</strong></p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">for</span> db_idx <span style="color:#f92672">in</span> range(n_db):  <span style="color:#75715e"># Each thread processes all vectors</span>
 </span></span></code></pre></div><p><strong>Coalesced:</strong></p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">for</span> db_idx <span style="color:#f92672">in</span> range(thread_idx, n_db, block_size):  <span style="color:#75715e"># Threads split the work</span>
-</span></span></code></pre></div><p>Instead of each thread processing all million database vectors, threads in a block divide them up. Thread 0 processes vectors 0, 256, 512, &hellip;, while thread 1 processes 1, 257, 513, &hellip;, and so on.</p>
-<h2 id="memory-coalescing-implementation-details">Memory Coalescing Implementation Details<a hidden class="anchor" aria-hidden="true" href="#memory-coalescing-implementation-details">#</a></h2>
-<p>The memory coalescing optimization happens at line 30 in [similarity_search_coalesced.py:30](Memory Coalescence/Memory Coalescing Code/similarity_search_coalesced.py#L30):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>sim <span style="color:#f92672">+=</span> queries[query_idx, feat_idx] <span style="color:#f92672">*</span> database_T[feat_idx, db_idx]
-</span></span></code></pre></div><p>Let&rsquo;s trace exactly what happens when a warp (32 threads) executes this line:</p>
-<p><strong>Iteration 1 (db_idx varies by thread):</strong></p>
-<ul>
-<li>Thread 0: accesses <code>database_T[0, 0]</code> (memory address: base + 0)</li>
-<li>Thread 1: accesses <code>database_T[0, 1]</code> (memory address: base + 4)</li>
-<li>Thread 2: accesses <code>database_T[0, 2]</code> (memory address: base + 8)</li>
-<li>&hellip;</li>
-<li>Thread 31: accesses <code>database_T[0, 31]</code> (memory address: base + 124)</li>
-</ul>
-<p>These 32 accesses are consecutive in memory! The GPU hardware detects this pattern and combines all 32 reads into a single memory transaction.</p>
-<p><strong>Why the transpose is crucial:</strong></p>
-<p>Without transposing:</p>
-<ul>
-<li><code>database[0, 0]</code> is at address <code>base + 0</code></li>
-<li><code>database[1, 0]</code> is at address <code>base + 128 * 4 = base + 512</code></li>
-<li><code>database[2, 0]</code> is at address <code>base + 256 * 4 = base + 1024</code></li>
-</ul>
-<p>With 512 bytes between accesses, these cannot be coalesced!</p>
-<p>With transposing:</p>
-<ul>
-<li><code>database_T[0, 0]</code> is at address <code>base + 0</code></li>
-<li><code>database_T[0, 1]</code> is at address <code>base + 4</code></li>
-<li><code>database_T[0, 2]</code> is at address <code>base + 8</code></li>
-</ul>
-<p>Only 4 bytes apart—perfect for coalescing!</p>
-<h2 id="shared-memory-implementation-details">Shared Memory Implementation Details<a hidden class="anchor" aria-hidden="true" href="#shared-memory-implementation-details">#</a></h2>
-<p>The shared memory optimization spans lines 36-48 in [similarity_search_coalesced.py:36-48](Memory Coalescence/Memory Coalescing Code/similarity_search_coalesced.py#L36-L48):</p>
-<h3 id="step-1-declare-shared-memory-lines-18-19">Step 1: Declare Shared Memory (lines 18-19)<a hidden class="anchor" aria-hidden="true" href="#step-1-declare-shared-memory-lines-18-19">#</a></h3>
+</span></span></code></pre></div><p>Instead of each thread processing all database vectors, threads in a block divide them up. Thread 0 processes vectors 0, 256, 512, &hellip;, while thread 1 processes 1, 257, 513, &hellip;, and so on.</p>
+<h3 id="3-memory-coalescing-implementation">3. Memory Coalescing Implementation<a hidden class="anchor" aria-hidden="true" href="#3-memory-coalescing-implementation">#</a></h3>
+<p><strong>Non-coalesced:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>database[db_idx, feat_idx]  <span style="color:#75715e"># Shape: (n_vectors, dim)</span>
+</span></span></code></pre></div><p><strong>Coalesced:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>database_T[feat_idx, db_idx]  <span style="color:#75715e"># Shape: (dim, n_vectors)</span>
+</span></span></code></pre></div><p>By transposing the database from <code>(n_vectors, dim)</code> to <code>(dim, n_vectors)</code>, we ensure that when adjacent threads access <code>database_T[feat_idx, 0]</code>, <code>database_T[feat_idx, 1]</code>, <code>database_T[feat_idx, 2]</code>, etc., they&rsquo;re accessing consecutive memory locations.</p>
+<h3 id="4-shared-memory-implementation-details">4. Shared Memory Implementation Details<a hidden class="anchor" aria-hidden="true" href="#4-shared-memory-implementation-details">#</a></h3>
+<p>The shared memory optimization is implemented in line 36-48:</p>
+<h4 id="step-1-declare-shared-memory-lines-18-19">Step 1: Declare Shared Memory (lines 18-19)<a hidden class="anchor" aria-hidden="true" href="#step-1-declare-shared-memory-lines-18-19">#</a></h4>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>shared_best_sim <span style="color:#f92672">=</span> cuda<span style="color:#f92672">.</span>shared<span style="color:#f92672">.</span>array(<span style="color:#ae81ff">256</span>, dtype<span style="color:#f92672">=</span>numba<span style="color:#f92672">.</span>float32)
 </span></span><span style="display:flex;"><span>shared_best_idx <span style="color:#f92672">=</span> cuda<span style="color:#f92672">.</span>shared<span style="color:#f92672">.</span>array(<span style="color:#ae81ff">256</span>, dtype<span style="color:#f92672">=</span>numba<span style="color:#f92672">.</span>int32)
-</span></span></code></pre></div><p>We allocate two arrays in shared memory—one for similarity scores, one for indices. These arrays are visible to all 256 threads in the block.</p>
-<h3 id="step-2-store-local-results-lines-36-37">Step 2: Store Local Results (lines 36-37)<a hidden class="anchor" aria-hidden="true" href="#step-2-store-local-results-lines-36-37">#</a></h3>
+</span></span></code></pre></div><p>First, we allocate two arrays in shared memory, one for similarity scores, one for indices. These arrays are visible to all 256 threads in the block.</p>
+<h4 id="step-2-store-local-results-lines-36-37">Step 2: Store Local Results (lines 36-37)<a hidden class="anchor" aria-hidden="true" href="#step-2-store-local-results-lines-36-37">#</a></h4>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>shared_best_sim[thread_idx] <span style="color:#f92672">=</span> local_best_sim
 </span></span><span style="display:flex;"><span>shared_best_idx[thread_idx] <span style="color:#f92672">=</span> local_best_idx
 </span></span></code></pre></div><p>After each thread finds its best match among its assigned database vectors, it stores the result in shared memory. Thread 0 writes to position 0, thread 1 to position 1, etc.</p>
-<h3 id="step-3-synchronize-threads-line-38">Step 3: Synchronize Threads (line 38)<a hidden class="anchor" aria-hidden="true" href="#step-3-synchronize-threads-line-38">#</a></h3>
+<h4 id="step-3-synchronize-threads-line-38">Step 3: Synchronize Threads (line 38)<a hidden class="anchor" aria-hidden="true" href="#step-3-synchronize-threads-line-38">#</a></h4>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>cuda<span style="color:#f92672">.</span>syncthreads()
-</span></span></code></pre></div><p>This ensures all threads have finished writing before we proceed. Without this, some threads might start reading shared memory before others have finished writing!</p>
-<h3 id="step-4-parallel-reduction-lines-41-48">Step 4: Parallel Reduction (lines 41-48)<a hidden class="anchor" aria-hidden="true" href="#step-4-parallel-reduction-lines-41-48">#</a></h3>
+</span></span></code></pre></div><p>This ensures all threads have finished writing before we proceed</p>
+<h4 id="step-4-parallel-reduction-lines-41-48">Step 4: Parallel Reduction (lines 41-48)<a hidden class="anchor" aria-hidden="true" href="#step-4-parallel-reduction-lines-41-48">#</a></h4>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>stride <span style="color:#f92672">=</span> block_size <span style="color:#f92672">//</span> <span style="color:#ae81ff">2</span>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span> stride <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>:
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> thread_idx <span style="color:#f92672">&lt;</span> stride:
@@ -392,7 +315,7 @@ Thread 3 reads address 384
 </span></span><span style="display:flex;"><span>            shared_best_idx[thread_idx] <span style="color:#f92672">=</span> shared_best_idx[thread_idx <span style="color:#f92672">+</span> stride]
 </span></span><span style="display:flex;"><span>    cuda<span style="color:#f92672">.</span>syncthreads()
 </span></span><span style="display:flex;"><span>    stride <span style="color:#f92672">//=</span> <span style="color:#ae81ff">2</span>
-</span></span></code></pre></div><p>This is a classic parallel reduction algorithm. Imagine 256 values that we want to reduce to a single maximum:</p>
+</span></span></code></pre></div><p>To understand parallel reduction algorithm, Imagine 256 values that we want to reduce to a single maximum:</p>
 <p><strong>Iteration 1 (stride=128):</strong></p>
 <ul>
 <li>Thread 0 compares positions 0 and 128, keeps the max</li>
@@ -408,25 +331,13 @@ Thread 3 reads address 384
 <li>&hellip;</li>
 <li>Now we have 64 candidates</li>
 </ul>
-<p>This continues (32, 16, 8, 4, 2, 1) until thread 0 holds the global maximum.</p>
-<p>The beauty of this algorithm: instead of having one thread sequentially check 256 values (256 steps), we perform the reduction in log₂(256) = 8 parallel steps!</p>
-<h3 id="step-5-write-final-result-lines-50-52">Step 5: Write Final Result (lines 50-52)<a hidden class="anchor" aria-hidden="true" href="#step-5-write-final-result-lines-50-52">#</a></h3>
+<p>This continues (32, 16, 8, 4, 2, 1) until thread 0 holds the global maximum. Instead of having one thread sequentially check 256 values (256 steps), the reduction reduced the step to log₂(256) = 8 parallel steps.</p>
+<h4 id="step-5-write-final-result-lines-50-52">Step 5: Write Final Result (lines 50-52)<a hidden class="anchor" aria-hidden="true" href="#step-5-write-final-result-lines-50-52">#</a></h4>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> thread_idx <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:
 </span></span><span style="display:flex;"><span>    results[query_idx, <span style="color:#ae81ff">0</span>] <span style="color:#f92672">=</span> shared_best_idx[<span style="color:#ae81ff">0</span>]
 </span></span><span style="display:flex;"><span>    results[query_idx, <span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> shared_best_sim[<span style="color:#ae81ff">0</span>]
-</span></span></code></pre></div><p>Only thread 0 writes the final result back to global memory, avoiding write conflicts.</p>
-<h2 id="benchmark-results-coalesced--shared-memory-version">Benchmark Results: Coalesced + Shared Memory Version<a hidden class="anchor" aria-hidden="true" href="#benchmark-results-coalesced--shared-memory-version">#</a></h2>
-<p>When we run the optimized implementation on the same SIFT1M dataset, the results are dramatic:</p>
-<pre tabindex="0"><code>TRUE COALESCED (Optimized Implementation)
-  Memory access: queries[query_idx, feat] * database_T[feat, db_idx]
-  Benefit: Adjacent threads access consecutive memory (coalesced!)
-  Benefit: Shared memory reduction for parallel max finding
-
-  Time: ~15-25 ms
-  Throughput: ~400,000-667,000 queries/sec
-  Speedup vs baseline: 8-12x faster
-</code></pre><h3 id="performance-summary">Performance Summary<a hidden class="anchor" aria-hidden="true" href="#performance-summary">#</a></h3>
-<p>Let&rsquo;s put the numbers side by side:</p>
+</span></span></code></pre></div><p>Only thread 0 writes the final result back to global memory</p>
+<h2 id="benchmark-results">Benchmark Results<a hidden class="anchor" aria-hidden="true" href="#benchmark-results">#</a></h2>
 <table>
   <thead>
       <tr>
@@ -439,35 +350,24 @@ Thread 3 reads address 384
   <tbody>
       <tr>
           <td>Non-coalesced</td>
-          <td>150-200</td>
-          <td>50,000-67,000</td>
+          <td>33500.43</td>
+          <td>299</td>
           <td>1.0x</td>
       </tr>
       <tr>
           <td>Coalesced + Shared Memory</td>
-          <td>15-25</td>
-          <td>400,000-667,000</td>
-          <td><strong>8-12x</strong></td>
+          <td>20475.88</td>
+          <td>488</td>
+          <td>1.64x</td>
       </tr>
   </tbody>
 </table>
-<p>The exact speedup varies by GPU architecture, but the pattern is consistent: proper memory access patterns can yield an order of magnitude improvement!</p>
-<h3 id="why-such-dramatic-improvements">Why Such Dramatic Improvements?<a hidden class="anchor" aria-hidden="true" href="#why-such-dramatic-improvements">#</a></h3>
-<p>The speedup comes from two synergistic optimizations:</p>
-<ol>
-<li>
-<p><strong>Memory Coalescing (5-8x)</strong>: By transposing the database and organizing threads appropriately, we reduce the number of memory transactions by a factor of 8-16. Memory bandwidth is often the primary bottleneck in GPU computing, so this has a massive impact.</p>
-</li>
-<li>
-<p><strong>Shared Memory Reduction (1.5-2x)</strong>: The parallel reduction in shared memory is much faster than having each thread independently find the maximum in global memory. Additionally, writing final results only once (instead of many times) reduces memory traffic.</p>
-</li>
-<li>
-<p><strong>Better Thread Utilization</strong>: In the naive version, threads work independently and may finish at very different times. In the optimized version, threads cooperate and synchronize, leading to better overall utilization of GPU resources.</p>
-</li>
-</ol>
+<p>We can see improvement in the Coalesced + Shared Memory based on the time it took to complete the operation. Comparing both operations using NVIDIA Nsight Systems gives more details:</p>
+<p><img alt="coalesced" loading="lazy" src="/images/coalesced.jpg"></p>
+<p><img alt="non-coalesced" loading="lazy" src="/images/non-coalesced.jpg"></p>
+<p>Unallocated warps percentage can be seen to reach 80% in the non coalesced version. After distributing the workload and implementing said optimization techniques in the coalesced version, the warp slots available has been maximized in the SM up to &gt;99%.</p>
 <h2 id="conclusion">Conclusion<a hidden class="anchor" aria-hidden="true" href="#conclusion">#</a></h2>
-<p>Similarity search is a fundamental operation in modern AI systems, from RAG pipelines to recommendation engines. While GPUs offer massive parallelism, simply porting CPU code to CUDA isn&rsquo;t enough—you need to optimize for the GPU&rsquo;s memory hierarchy.</p>
-<p>In this article, we demonstrated two critical GPU optimization techniques:</p>
+<p>In this article, we demonstrated two GPU optimization techniques:</p>
 <ol>
 <li>
 <p><strong>Memory Coalescing</strong>: Organizing data and thread access patterns so that threads in a warp access consecutive memory locations, reducing the number of memory transactions by an order of magnitude.</p>
@@ -476,24 +376,7 @@ Thread 3 reads address 384
 <p><strong>Shared Memory</strong>: Using fast, programmable on-chip memory for intermediate results and parallel algorithms like reduction, avoiding expensive global memory accesses.</p>
 </li>
 </ol>
-<p>Together, these optimizations yielded an 8-12x speedup on the SIFT1M benchmark, transforming a 150-200ms operation into a 15-25ms one. For a production system processing millions of queries, this translates to massive cost savings and improved user experience.</p>
-<p>The techniques we&rsquo;ve explored here aren&rsquo;t limited to similarity search—they apply broadly to GPU programming:</p>
-<ul>
-<li>Matrix operations (the foundation of deep learning)</li>
-<li>Image processing and computer vision</li>
-<li>Scientific simulations</li>
-<li>Graph algorithms</li>
-</ul>
-<p>As AI systems continue to scale, understanding and applying these low-level optimizations becomes increasingly important. The difference between a naive GPU implementation and an optimized one can mean the difference between a system that&rsquo;s barely usable and one that runs in real-time.</p>
-<h3 id="key-takeaways">Key Takeaways<a hidden class="anchor" aria-hidden="true" href="#key-takeaways">#</a></h3>
-<ul>
-<li><strong>Memory bandwidth is often the bottleneck</strong>: Optimize your memory access patterns first</li>
-<li><strong>Coalescing matters</strong>: Transpose data if needed to enable coalesced access</li>
-<li><strong>Use shared memory</strong>: It&rsquo;s 100x faster than global memory—use it for frequently accessed data</li>
-<li><strong>Thread cooperation</strong>: Don&rsquo;t think of threads as independent—they&rsquo;re strongest when working together</li>
-<li><strong>Measure, don&rsquo;t guess</strong>: Always benchmark your optimizations on realistic datasets</li>
-</ul>
-<p>The full source code for both implementations is available in this repository. Try running the benchmarks on your own GPU and experimenting with different optimization strategies!</p>
+<p>These optimizations yielded an 1.64x speedup on the SIFT1M benchmark which can be beneficial for a production system processing millions of queries through cost savings and improved user experience. Understanding and applying these low-level optimizations becomes increasingly important as AI systems continue to scale,</p>
 
 
   </div>
@@ -506,7 +389,7 @@ Thread 3 reads address 384
     </main>
     
 <footer class="footer">
-        <span>&copy; 2026 <a href="http://localhost:1313/">FirH&#39;s Blog</a></span> · 
+        <span>&copy; 2026 <a href="http://localhost:1313/en/">FirH&#39;s Blog</a></span> · 
 
     <span>
         Powered by

@@ -1,5 +1,5 @@
 baseURL = "https://FirH.github.io/"
-languageCode = "en-us"
+languageCode = "en"
 title = "FirH's Blog"
 theme = "PaperMod"
 defaultContentLanguage = "en"
