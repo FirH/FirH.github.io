@@ -34,10 +34,10 @@ GPUs in other hand, has parallel cores that can be used to compute many dot prod
 - RAM: 32 GB
 
 **Software:**
-- Python 3.x
-- CUDA Toolkit
-- Numba
-- NumPy
+- Python 3.11.13
+- Nvidia Nsight Systems
+- Numba 0.63.1
+- NumPy 2.3.5
 
 **Dataset:**
 We'll use the SIFT1M dataset, a standard benchmark in the similarity search community:
