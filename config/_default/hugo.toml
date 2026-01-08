@@ -2,6 +2,7 @@ baseURL = "https://FirH.github.io/"
 languageCode = "en-us"
 title = "FirH's Blog"
 theme = "PaperMod"
+defaultContentLanguage = "en"
 
 [caches]
   [caches.images]

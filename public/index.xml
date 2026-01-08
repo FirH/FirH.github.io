@@ -2,11 +2,20 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>FirH&#39;s Blog</title>
-    <link>https://FirH.github.io/</link>
+    <link>http://localhost:1313/</link>
     <description>Recent content on FirH&#39;s Blog</description>
     <generator>Hugo -- 0.152.2</generator>
     <language>en</language>
-    <lastBuildDate></lastBuildDate>
-    <atom:link href="https://FirH.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 02 Jan 2026 08:50:21 +0700</lastBuildDate>
+    <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Memory Coalescing</title>
+      <link>http://localhost:1313/en/posts/memory-coalescing/</link>
+      <pubDate>Fri, 02 Jan 2026 08:50:21 +0700</pubDate>
+      <guid>http://localhost:1313/en/posts/memory-coalescing/</guid>
+      <description>&lt;h1 id=&#34;accelerating-similarity-search-with-memory-coalescing-and-shared-memory&#34;&gt;Accelerating Similarity Search with Memory Coalescing and Shared Memory&lt;/h1&gt;
+&lt;h2 id=&#34;introduction&#34;&gt;Introduction&lt;/h2&gt;
+&lt;p&gt;In the age of large language models and retrieval-augmented generation (RAG), similarity search has become a fundamental operation. Whether you&amp;rsquo;re building a semantic search engine, a recommendation system, or a RAG pipeline, you&amp;rsquo;ll often need to find the most similar vectors from a large database given a query vector. But what happens when your database contains millions of vectors? Performance becomes critical.&lt;/p&gt;</description>
+    </item>
   </channel>
 </rss>
