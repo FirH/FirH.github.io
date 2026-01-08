@@ -1,0 +1,16 @@
+baseURL = "https://FirH.github.io/"
+languageCode = "en-us"
+title = "FirH's Blog"
+theme = "PaperMod"
+
+[caches]
+  [caches.images]
+    dir = ':cacheDir/images'
+
+[[module.mounts]]
+source = 'static'
+target = 'static'
+
+[[module.mounts]]
+source = 'images'
+target = 'static/images'

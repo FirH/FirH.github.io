@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Memory Coalescing | FirH&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="Accelerating Similarity Search with Memory Coalescing and Shared Memory
+Introduction
+In the age of large language models and retrieval-augmented generation (RAG), similarity search has become a fundamental operation. Whether you&rsquo;re building a semantic search engine, a recommendation system, or a RAG pipeline, you&rsquo;ll often need to find the most similar vectors from a large database given a query vector. But what happens when your database contains millions of vectors? Performance becomes critical.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/en/posts/memory-coalescing/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/en/posts/memory-coalescing/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="FirH&#39;s Blog (Alt + H)">FirH&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                    <ul class="lang-switch"><li>|</li>
+                        <li>
+                            <a href="http://localhost:1313/id/" title="Id"
+                                aria-label="Id">Id</a>
+                        </li>
+                    </ul>
+            </div>
+        </div>
+        <ul id="menu">
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Memory Coalescing
+      <span class="entry-hint" title="Draft">
+        <svg xmlns="http://www.w3.org/2000/svg" height="35" viewBox="0 -960 960 960" fill="currentColor">
+          <path
+            d="M160-410v-60h300v60H160Zm0-165v-60h470v60H160Zm0-165v-60h470v60H160Zm360 580v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q9 9 13 20t4 22q0 11-4.5 22.5T862.09-380L643-160H520Zm300-263-37-37 37 37ZM580-220h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z" />
+        </svg>
+      </span>
+    </h1>
+    <div class="post-meta"><span title='2026-01-02 08:50:21 +0700 WIB'>January 2, 2026</span>
+
+</div>
+  </header> 
+  <div class="post-content"><h1 id="accelerating-similarity-search-with-memory-coalescing-and-shared-memory">Accelerating Similarity Search with Memory Coalescing and Shared Memory<a hidden class="anchor" aria-hidden="true" href="#accelerating-similarity-search-with-memory-coalescing-and-shared-memory">#</a></h1>
+<h2 id="introduction">Introduction<a hidden class="anchor" aria-hidden="true" href="#introduction">#</a></h2>
+<p>In the age of large language models and retrieval-augmented generation (RAG), similarity search has become a fundamental operation. Whether you&rsquo;re building a semantic search engine, a recommendation system, or a RAG pipeline, you&rsquo;ll often need to find the most similar vectors from a large database given a query vector. But what happens when your database contains millions of vectors? Performance becomes critical.</p>
+<p>In this article, i will demonsrate how GPU optimization techniques such as memory coalescing and shared memory accelerate similarity search operations. We&rsquo;ll walk through CUDA implementations, demonstrate the performance gains, and explain exactly why these optimizations work.</p>
+<h2 id="similarity-search-at-scale">Similarity Search at Scale<a hidden class="anchor" aria-hidden="true" href="#similarity-search-at-scale">#</a></h2>
+<p>Similarity search is the task of finding the most similar items in a database to a given query. In the context of vector embeddings, this typically means computing a similarity metric between a query vector and millions of database vectors, then finding the highest-scoring matches.</p>
+<p>Consider a typical RAG application: when a user asks a question, you need to:</p>
+<ol>
+<li>Convert the question to a vector embedding</li>
+<li>Compare it against millions of document embeddings</li>
+<li>Retrieve the top-k most relevant documents</li>
+<li>Feed them to your language model</li>
+</ol>
+<p>Computing similarity against millions of vectors can easily become a bottleneck. On a CPU, processing 10,000 queries against 1 million database vectors (each with 128 dimensions) involves roughly 1.28 billion dot products.</p>
+<p>GPUs in other hand, has parallel cores that can be used to compute many dot products simultaneously with it&rsquo;s parallel cores. However, we still need to implement try the memory access patterns optimization in order to utilize said capability. The techniques implemented in this blog are memory coalescing and shared memory.</p>
+<h2 id="experimental-setup">Experimental Setup<a hidden class="anchor" aria-hidden="true" href="#experimental-setup">#</a></h2>
+<p><strong>Hardware:</strong></p>
+<ul>
+<li>GPU: NVIDIA GeForce RTX 4070 Laptop GPU</li>
+<li>CPU: 13th Gen Intel(R) Core(TM) i9-13900HX</li>
+<li>RAM: 32 GB</li>
+</ul>
+<p><strong>Software:</strong></p>
+<ul>
+<li>Python 3.x</li>
+<li>CUDA Toolkit</li>
+<li>Numba</li>
+<li>NumPy</li>
+</ul>
+<p><strong>Dataset:</strong>
+We&rsquo;ll use the SIFT1M dataset, a standard benchmark in the similarity search community:</p>
+<ul>
+<li><strong>Database vectors</strong>: 1,000,000 vectors × 128 dimensions</li>
+<li><strong>Query vectors</strong>: 10,000 vectors × 128 dimensions</li>
+<li><strong>Ground truth</strong>: Pre-computed top-100 nearest neighbors</li>
+<li><strong>Total size</strong>: ~550 MB</li>
+<li><strong>Similarity metric</strong>: Dot product (higher values indicate greater similarity)</li>
+</ul>
+<h2 id="naive-gpu-implementation">Naive GPU Implementation<a hidden class="anchor" aria-hidden="true" href="#naive-gpu-implementation">#</a></h2>
+<p>Let&rsquo;s start with a straightforward GPU implementation. Each thread processes one query, computing its similarity against all database vectors:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> numpy <span style="color:#66d9ef">as</span> np
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> numba
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> numba <span style="color:#f92672">import</span> cuda
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@cuda.jit</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">similarity_search_non_coalesced</span>(queries, database, results):
+</span></span><span style="display:flex;"><span>    query_idx <span style="color:#f92672">=</span> cuda<span style="color:#f92672">.</span>grid(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> query_idx <span style="color:#f92672">&lt;</span> queries<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">0</span>]:
+</span></span><span style="display:flex;"><span>        n_db <span style="color:#f92672">=</span> database<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>        dim <span style="color:#f92672">=</span> database<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>        best_sim <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1e9</span>
+</span></span><span style="display:flex;"><span>        best_idx <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> db_idx <span style="color:#f92672">in</span> range(n_db):
+</span></span><span style="display:flex;"><span>            sim <span style="color:#f92672">=</span> <span style="color:#ae81ff">0.0</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">for</span> feat_idx <span style="color:#f92672">in</span> range(dim):
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e"># Non-coalesced: queries[query_idx, feat_idx] - same for all threads</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e"># Non-coalesced: database[db_idx, feat_idx] - strided access</span>
+</span></span><span style="display:flex;"><span>                sim <span style="color:#f92672">+=</span> queries[query_idx, feat_idx] <span style="color:#f92672">*</span> database[db_idx, feat_idx]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> sim <span style="color:#f92672">&gt;</span> best_sim:
+</span></span><span style="display:flex;"><span>                best_sim <span style="color:#f92672">=</span> sim
+</span></span><span style="display:flex;"><span>                best_idx <span style="color:#f92672">=</span> db_idx
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        results[query_idx, <span style="color:#ae81ff">0</span>] <span style="color:#f92672">=</span> best_idx
+</span></span><span style="display:flex;"><span>        results[query_idx, <span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> best_sim
+</span></span></code></pre></div><ol>
+<li>Each thread is assigned one query via <code>cuda.grid(1)</code></li>
+<li>For each query, iterate through all database vectors</li>
+<li>For each database vector, compute the dot product</li>
+<li>Track the best similarity score and its index</li>
+<li>Store the results</li>
+</ol>
+<p>Before doing the benchmark and optimizing the access patterns, we will need to understand Memory Coalescing and Shared Memory.</p>
+<h2 id="understanding-memory-coalescing">Understanding Memory Coalescing<a hidden class="anchor" aria-hidden="true" href="#understanding-memory-coalescing">#</a></h2>
+<h3 id="the-gpu-memory-hierarchy">The GPU Memory Hierarchy<a hidden class="anchor" aria-hidden="true" href="#the-gpu-memory-hierarchy">#</a></h3>
+<p>GPUs have multiple levels of memory:</p>
+<ul>
+<li><strong>Global memory</strong>: Largest and most abundant memory available (GBs), but slowest to access</li>
+<li><strong>Shared memory</strong>: On-chip memory with much faster speed than global memory</li>
+<li><strong>Registers</strong>: Fastest memory type located on the Streaming Multiprocessor</li>
+</ul>
+<p>Accessing global memory can be an expensive operation, but when threads in a warp (a group of 32 threads that execute in lockstep) access consecutive memory addresses, the hardware can coalesce multiple memory requests into a single transaction.</p>
+<h3 id="what-is-memory-coalescing">What is Memory Coalescing?<a hidden class="anchor" aria-hidden="true" href="#what-is-memory-coalescing">#</a></h3>
+<p>Memory coalescing occurs when adjacent threads access adjacent memory locations. Instead of issuing 32 separate memory requests, the GPU can issue a single request that fetches all required data in one transaction.</p>
+<p>Let&rsquo;s take a look at this line in the naive implementation:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>sim <span style="color:#f92672">+=</span> queries[query_idx, feat_idx] <span style="color:#f92672">*</span> database[db_idx, feat_idx]
+</span></span></code></pre></div><p>While threads access the same <code>db_idx</code> at the same time, the memory layout of a row-major array means that <code>database[db_idx, feat_idx]</code> and <code>database[db_idx, feat_idx+1]</code> are consecutive in memory, but <code>database[db_idx, feat_idx]</code> and <code>database[db_idx+1, feat_idx]</code> are far apart (separated by the entire row width of 128 floats).</p>
+<h2 id="understanding-shared-memory">Understanding Shared Memory<a hidden class="anchor" aria-hidden="true" href="#understanding-shared-memory">#</a></h2>
+<p>Shared memory is a memory space accessible by all threads within a single thread block stored on L1 Data Cache of GPU&rsquo;s SM.</p>
+<p>In similarity search, we can use shared memory to:</p>
+<ol>
+<li>Store partial results from each thread</li>
+<li>Perform a parallel reduction to find the maximum similarity</li>
+<li>Avoid having all threads write to global memory repeatedly</li>
+</ol>
+<h2 id="the-optimized-implementation">The Optimized Implementation<a hidden class="anchor" aria-hidden="true" href="#the-optimized-implementation">#</a></h2>
+<p>Now let&rsquo;s see how we can combine memory coalescing and shared memory to dramatically improve performance:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> numpy <span style="color:#66d9ef">as</span> np
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> numba
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> numba <span style="color:#f92672">import</span> cuda
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@cuda.jit</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">similarity_search_true_coalesced</span>(queries, database_T, results):
+</span></span><span style="display:flex;"><span>    query_idx <span style="color:#f92672">=</span> cuda<span style="color:#f92672">.</span>blockIdx<span style="color:#f92672">.</span>x
+</span></span><span style="display:flex;"><span>    thread_idx <span style="color:#f92672">=</span> cuda<span style="color:#f92672">.</span>threadIdx<span style="color:#f92672">.</span>x
+</span></span><span style="display:flex;"><span>    block_size <span style="color:#f92672">=</span> cuda<span style="color:#f92672">.</span>blockDim<span style="color:#f92672">.</span>x
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> query_idx <span style="color:#f92672">&gt;=</span> queries<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">0</span>]:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    dim <span style="color:#f92672">=</span> database_T<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>    n_db <span style="color:#f92672">=</span> database_T<span style="color:#f92672">.</span>shape[<span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    shared_best_sim <span style="color:#f92672">=</span> cuda<span style="color:#f92672">.</span>shared<span style="color:#f92672">.</span>array(<span style="color:#ae81ff">256</span>, dtype<span style="color:#f92672">=</span>numba<span style="color:#f92672">.</span>float32)
+</span></span><span style="display:flex;"><span>    shared_best_idx <span style="color:#f92672">=</span> cuda<span style="color:#f92672">.</span>shared<span style="color:#f92672">.</span>array(<span style="color:#ae81ff">256</span>, dtype<span style="color:#f92672">=</span>numba<span style="color:#f92672">.</span>int32)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    local_best_sim <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1e9</span>
+</span></span><span style="display:flex;"><span>    local_best_idx <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> db_idx <span style="color:#f92672">in</span> range(thread_idx, n_db, block_size):
+</span></span><span style="display:flex;"><span>        sim <span style="color:#f92672">=</span> <span style="color:#ae81ff">0.0</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> feat_idx <span style="color:#f92672">in</span> range(dim):
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># COALESCED: database_T[feat_idx, db_idx]</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># Adjacent threads access consecutive memory locations</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># thread 0: db_idx=0, thread 1: db_idx=1, etc.</span>
+</span></span><span style="display:flex;"><span>            sim <span style="color:#f92672">+=</span> queries[query_idx, feat_idx] <span style="color:#f92672">*</span> database_T[feat_idx, db_idx]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> sim <span style="color:#f92672">&gt;</span> local_best_sim:
+</span></span><span style="display:flex;"><span>            local_best_sim <span style="color:#f92672">=</span> sim
+</span></span><span style="display:flex;"><span>            local_best_idx <span style="color:#f92672">=</span> db_idx
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    shared_best_sim[thread_idx] <span style="color:#f92672">=</span> local_best_sim
+</span></span><span style="display:flex;"><span>    shared_best_idx[thread_idx] <span style="color:#f92672">=</span> local_best_idx
+</span></span><span style="display:flex;"><span>    cuda<span style="color:#f92672">.</span>syncthreads()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Reduction in shared memory</span>
+</span></span><span style="display:flex;"><span>    stride <span style="color:#f92672">=</span> block_size <span style="color:#f92672">//</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> stride <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> thread_idx <span style="color:#f92672">&lt;</span> stride:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> shared_best_sim[thread_idx <span style="color:#f92672">+</span> stride] <span style="color:#f92672">&gt;</span> shared_best_sim[thread_idx]:
+</span></span><span style="display:flex;"><span>                shared_best_sim[thread_idx] <span style="color:#f92672">=</span> shared_best_sim[thread_idx <span style="color:#f92672">+</span> stride]
+</span></span><span style="display:flex;"><span>                shared_best_idx[thread_idx] <span style="color:#f92672">=</span> shared_best_idx[thread_idx <span style="color:#f92672">+</span> stride]
+</span></span><span style="display:flex;"><span>        cuda<span style="color:#f92672">.</span>syncthreads()
+</span></span><span style="display:flex;"><span>        stride <span style="color:#f92672">//=</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> thread_idx <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>        results[query_idx, <span style="color:#ae81ff">0</span>] <span style="color:#f92672">=</span> shared_best_idx[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>        results[query_idx, <span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> shared_best_sim[<span style="color:#ae81ff">0</span>]
+</span></span></code></pre></div><h2 id="differences-between-the-two-implementations">Differences Between the Two Implementations<a hidden class="anchor" aria-hidden="true" href="#differences-between-the-two-implementations">#</a></h2>
+<h3 id="1-thread-organization">1. Thread Organization<a hidden class="anchor" aria-hidden="true" href="#1-thread-organization">#</a></h3>
+<p><strong>Non-coalesced:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>query_idx <span style="color:#f92672">=</span> cuda<span style="color:#f92672">.</span>grid(<span style="color:#ae81ff">1</span>)  <span style="color:#75715e"># Each thread = one query</span>
+</span></span></code></pre></div><p><strong>Coalesced:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>query_idx <span style="color:#f92672">=</span> cuda<span style="color:#f92672">.</span>blockIdx<span style="color:#f92672">.</span>x   <span style="color:#75715e"># Each block = one query</span>
+</span></span><span style="display:flex;"><span>thread_idx <span style="color:#f92672">=</span> cuda<span style="color:#f92672">.</span>threadIdx<span style="color:#f92672">.</span>x  <span style="color:#75715e"># Threads cooperate on one query</span>
+</span></span></code></pre></div><p>In the optimized version, we use an entire block of threads (256 threads) to process a single query. This allows threads to divide the database vectors among themselves.</p>
+<h3 id="2-work-distribution">2. Work Distribution<a hidden class="anchor" aria-hidden="true" href="#2-work-distribution">#</a></h3>
+<p><strong>Non-coalesced:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">for</span> db_idx <span style="color:#f92672">in</span> range(n_db):  <span style="color:#75715e"># Each thread processes all vectors</span>
+</span></span></code></pre></div><p><strong>Coalesced:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">for</span> db_idx <span style="color:#f92672">in</span> range(thread_idx, n_db, block_size):  <span style="color:#75715e"># Threads split the work</span>
+</span></span></code></pre></div><p>Instead of each thread processing all database vectors, threads in a block divide them up. Thread 0 processes vectors 0, 256, 512, &hellip;, while thread 1 processes 1, 257, 513, &hellip;, and so on.</p>
+<h3 id="3-memory-coalescing-implementation">3. Memory Coalescing Implementation<a hidden class="anchor" aria-hidden="true" href="#3-memory-coalescing-implementation">#</a></h3>
+<p><strong>Non-coalesced:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>database[db_idx, feat_idx]  <span style="color:#75715e"># Shape: (n_vectors, dim)</span>
+</span></span></code></pre></div><p><strong>Coalesced:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>database_T[feat_idx, db_idx]  <span style="color:#75715e"># Shape: (dim, n_vectors)</span>
+</span></span></code></pre></div><p>By transposing the database from <code>(n_vectors, dim)</code> to <code>(dim, n_vectors)</code>, we ensure that when adjacent threads access <code>database_T[feat_idx, 0]</code>, <code>database_T[feat_idx, 1]</code>, <code>database_T[feat_idx, 2]</code>, etc., they&rsquo;re accessing consecutive memory locations.</p>
+<h3 id="4-shared-memory-implementation-details">4. Shared Memory Implementation Details<a hidden class="anchor" aria-hidden="true" href="#4-shared-memory-implementation-details">#</a></h3>
+<p>The shared memory optimization is implemented in line 36-48:</p>
+<h4 id="step-1-declare-shared-memory-lines-18-19">Step 1: Declare Shared Memory (lines 18-19)<a hidden class="anchor" aria-hidden="true" href="#step-1-declare-shared-memory-lines-18-19">#</a></h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>shared_best_sim <span style="color:#f92672">=</span> cuda<span style="color:#f92672">.</span>shared<span style="color:#f92672">.</span>array(<span style="color:#ae81ff">256</span>, dtype<span style="color:#f92672">=</span>numba<span style="color:#f92672">.</span>float32)
+</span></span><span style="display:flex;"><span>shared_best_idx <span style="color:#f92672">=</span> cuda<span style="color:#f92672">.</span>shared<span style="color:#f92672">.</span>array(<span style="color:#ae81ff">256</span>, dtype<span style="color:#f92672">=</span>numba<span style="color:#f92672">.</span>int32)
+</span></span></code></pre></div><p>First, we allocate two arrays in shared memory, one for similarity scores, one for indices. These arrays are visible to all 256 threads in the block.</p>
+<h4 id="step-2-store-local-results-lines-36-37">Step 2: Store Local Results (lines 36-37)<a hidden class="anchor" aria-hidden="true" href="#step-2-store-local-results-lines-36-37">#</a></h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>shared_best_sim[thread_idx] <span style="color:#f92672">=</span> local_best_sim
+</span></span><span style="display:flex;"><span>shared_best_idx[thread_idx] <span style="color:#f92672">=</span> local_best_idx
+</span></span></code></pre></div><p>After each thread finds its best match among its assigned database vectors, it stores the result in shared memory. Thread 0 writes to position 0, thread 1 to position 1, etc.</p>
+<h4 id="step-3-synchronize-threads-line-38">Step 3: Synchronize Threads (line 38)<a hidden class="anchor" aria-hidden="true" href="#step-3-synchronize-threads-line-38">#</a></h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>cuda<span style="color:#f92672">.</span>syncthreads()
+</span></span></code></pre></div><p>This ensures all threads have finished writing before we proceed</p>
+<h4 id="step-4-parallel-reduction-lines-41-48">Step 4: Parallel Reduction (lines 41-48)<a hidden class="anchor" aria-hidden="true" href="#step-4-parallel-reduction-lines-41-48">#</a></h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>stride <span style="color:#f92672">=</span> block_size <span style="color:#f92672">//</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span> stride <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> thread_idx <span style="color:#f92672">&lt;</span> stride:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> shared_best_sim[thread_idx <span style="color:#f92672">+</span> stride] <span style="color:#f92672">&gt;</span> shared_best_sim[thread_idx]:
+</span></span><span style="display:flex;"><span>            shared_best_sim[thread_idx] <span style="color:#f92672">=</span> shared_best_sim[thread_idx <span style="color:#f92672">+</span> stride]
+</span></span><span style="display:flex;"><span>            shared_best_idx[thread_idx] <span style="color:#f92672">=</span> shared_best_idx[thread_idx <span style="color:#f92672">+</span> stride]
+</span></span><span style="display:flex;"><span>    cuda<span style="color:#f92672">.</span>syncthreads()
+</span></span><span style="display:flex;"><span>    stride <span style="color:#f92672">//=</span> <span style="color:#ae81ff">2</span>
+</span></span></code></pre></div><p>To understand parallel reduction algorithm, Imagine 256 values that we want to reduce to a single maximum:</p>
+<p><strong>Iteration 1 (stride=128):</strong></p>
+<ul>
+<li>Thread 0 compares positions 0 and 128, keeps the max</li>
+<li>Thread 1 compares positions 1 and 129, keeps the max</li>
+<li>&hellip;</li>
+<li>Thread 127 compares positions 127 and 255, keeps the max</li>
+<li>Now we have 128 candidates</li>
+</ul>
+<p><strong>Iteration 2 (stride=64):</strong></p>
+<ul>
+<li>Thread 0 compares positions 0 and 64, keeps the max</li>
+<li>Thread 1 compares positions 1 and 65, keeps the max</li>
+<li>&hellip;</li>
+<li>Now we have 64 candidates</li>
+</ul>
+<p>This continues (32, 16, 8, 4, 2, 1) until thread 0 holds the global maximum. Instead of having one thread sequentially check 256 values (256 steps), the reduction reduced the step to log₂(256) = 8 parallel steps.</p>
+<h4 id="step-5-write-final-result-lines-50-52">Step 5: Write Final Result (lines 50-52)<a hidden class="anchor" aria-hidden="true" href="#step-5-write-final-result-lines-50-52">#</a></h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> thread_idx <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>    results[query_idx, <span style="color:#ae81ff">0</span>] <span style="color:#f92672">=</span> shared_best_idx[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>    results[query_idx, <span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> shared_best_sim[<span style="color:#ae81ff">0</span>]
+</span></span></code></pre></div><p>Only thread 0 writes the final result back to global memory</p>
+<h2 id="benchmark-results">Benchmark Results<a hidden class="anchor" aria-hidden="true" href="#benchmark-results">#</a></h2>
+<table>
+  <thead>
+      <tr>
+          <th>Implementation</th>
+          <th>Time (ms)</th>
+          <th>Queries/sec</th>
+          <th>Speedup</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Non-coalesced</td>
+          <td>33500.43</td>
+          <td>299</td>
+          <td>1.0x</td>
+      </tr>
+      <tr>
+          <td>Coalesced + Shared Memory</td>
+          <td>20475.88</td>
+          <td>488</td>
+          <td>1.64x</td>
+      </tr>
+  </tbody>
+</table>
+<p>We can see improvement in the Coalesced + Shared Memory based on the time it took to complete the operation. Comparing both operations using NVIDIA Nsight Systems gives more details:</p>
+<p><img alt="coalesced" loading="lazy" src="/images/coalesced.jpg"></p>
+<p><img alt="non-coalesced" loading="lazy" src="/images/non-coalesced.jpg"></p>
+<p>Unallocated warps percentage can be seen to reach 80% in the non coalesced version. After distributing the workload and implementing said optimization techniques in the coalesced version, the warp slots available has been maximized in the SM up to &gt;99%.</p>
+<h2 id="conclusion">Conclusion<a hidden class="anchor" aria-hidden="true" href="#conclusion">#</a></h2>
+<p>In this article, we demonstrated two GPU optimization techniques:</p>
+<ol>
+<li>
+<p><strong>Memory Coalescing</strong>: Organizing data and thread access patterns so that threads in a warp access consecutive memory locations, reducing the number of memory transactions by an order of magnitude.</p>
+</li>
+<li>
+<p><strong>Shared Memory</strong>: Using fast, programmable on-chip memory for intermediate results and parallel algorithms like reduction, avoiding expensive global memory accesses.</p>
+</li>
+</ol>
+<p>These optimizations yielded an 1.64x speedup on the SIFT1M benchmark which can be beneficial for a production system processing millions of queries through cost savings and improved user experience. Understanding and applying these low-level optimizations becomes increasingly important as AI systems continue to scale,</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">FirH&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>
