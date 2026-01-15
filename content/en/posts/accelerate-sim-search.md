@@ -1,30 +1,28 @@
 +++
 date = '2026-01-02T08:50:21+07:00'
 draft = false
-title = 'Memory Coalescing'
+title = 'Accelerating Similarity Search with Work Distribution, Memory Coalescing, and Shared Memory'
 +++
 
-# Accelerating Similarity Search with Memory Coalescing and Shared Memory
+# Accelerating Similarity Search with Work Distribution, Memory Coalescing, and Shared Memory
 
 ## Introduction
 
-In the age of large language models and retrieval-augmented generation (RAG), similarity search has become a fundamental operation. Whether you're building a semantic search engine, a recommendation system, or a RAG pipeline, you'll often need to find the most similar vectors from a large database given a query vector. But what happens when your database contains millions of vectors? Performance becomes critical.
+In the age of large language models and retrieval-augmented generation (RAG), similarity search has become a fundamental operation. Whether you're building a semantic search engine, a recommendation system, or a RAG pipeline, you'll often need to find the most similar vectors from a large database given a query vector. But what happens when your database contains millions of vectors? Performance becomes critical in building these systems.
 
-In this article, i will demonsrate how GPU optimization techniques such as memory coalescing and shared memory accelerate similarity search operations. We'll walk through CUDA implementations, demonstrate the performance gains, and explain exactly why these optimizations work.
+In this article, i will demonsrate how GPU optimization techniques such as work distribution, memory coalescing, and shared memory accelerate similarity search operations. We'll walk through CUDA implementations, demonstrate the performance gains, and explain exactly why these optimizations work.
 
 ## Similarity Search at Scale
 
 Similarity search is the task of finding the most similar items in a database to a given query. In the context of vector embeddings, this typically means computing a similarity metric between a query vector and millions of database vectors, then finding the highest-scoring matches.
 
-Consider a typical RAG application: when a user asks a question, you need to:
+Consider a typical RAG application: when a user asks a question, the system needs to:
 1. Convert the question to a vector embedding
 2. Compare it against millions of document embeddings
 3. Retrieve the top-k most relevant documents
 4. Feed them to your language model
 
-Computing similarity against millions of vectors can easily become a bottleneck. On a CPU, processing 10,000 queries against 1 million database vectors (each with 128 dimensions) involves roughly 1.28 billion dot products.
-
-GPUs in other hand, has parallel cores that can be used to compute many dot products simultaneously with it's parallel cores. However, we still need to implement try the memory access patterns optimization in order to utilize said capability. The techniques implemented in this blog are memory coalescing and shared memory.
+Computing similarity against millions of vectors can easily become a bottleneck. On a CPU, processing 10,000 queries against 1 million database vectors (each with 128 dimensions) involves roughly 1.28 billion dot products. GPUs in other hand, has parallel cores that can be used to compute many dot products simultaneously. However, we still need to implement the memory access patterns optimization in order to utilize said capability. 
 
 ## Experimental Setup
 
@@ -40,16 +38,14 @@ GPUs in other hand, has parallel cores that can be used to compute many dot prod
 - NumPy 2.3.5
 
 **Dataset:**
-We'll use the SIFT1M dataset, a standard benchmark in the similarity search community:
+We'll use the SIFT1M dataset, a standard benchmark in the similarity search task:
 - **Database vectors**: 1,000,000 vectors × 128 dimensions
 - **Query vectors**: 10,000 vectors × 128 dimensions
 - **Ground truth**: Pre-computed top-100 nearest neighbors
-- **Total size**: ~550 MB
-- **Similarity metric**: Dot product (higher values indicate greater similarity)
-
+- **Total size**: 576.8 MB
 ## Naive GPU Implementation
 
-Let's start with a straightforward GPU implementation. Each thread processes one query, computing its similarity against all database vectors:
+Each thread processes one query, computing its similarity against all database vectors:
 
 ```python
 import numpy as np
@@ -68,8 +64,6 @@ def similarity_search_non_coalesced(queries, database, results):
         for db_idx in range(n_db):
             sim = 0.0
             for feat_idx in range(dim):
-                # Non-coalesced: queries[query_idx, feat_idx] - same for all threads
-                # Non-coalesced: database[db_idx, feat_idx] - strided access
                 sim += queries[query_idx, feat_idx] * database[db_idx, feat_idx]
 
             if sim > best_sim:
@@ -87,7 +81,7 @@ def similarity_search_non_coalesced(queries, database, results):
 5. Store the results
 
 Before doing the benchmark and optimizing the access patterns, we will need to understand Memory Coalescing and Shared Memory.
-## Understanding Memory Coalescing
+## Memory Coalescing
 
 ### The GPU Memory Hierarchy
 
@@ -96,7 +90,7 @@ GPUs have multiple levels of memory:
 - **Shared memory**: On-chip memory with much faster speed than global memory 
 - **Registers**: Fastest memory type located on the Streaming Multiprocessor
 
-Accessing global memory can be an expensive operation, but when threads in a warp (a group of 32 threads that execute in lockstep) access consecutive memory addresses, the hardware can coalesce multiple memory requests into a single transaction.
+Accessing global memory can be an expensive operation, but when threads in a warp (a group of 32 threads that execute in lockstep) access consecutive memory addresses, the GPU can coalesce multiple memory requests into a single transaction.
 
 ### What is Memory Coalescing?
 
@@ -107,19 +101,13 @@ Let's take a look at this line in the naive implementation:
 sim += queries[query_idx, feat_idx] * database[db_idx, feat_idx]
 ```
 
-While threads access the same `db_idx` at the same time, the memory layout of a row-major array means that `database[db_idx, feat_idx]` and `database[db_idx, feat_idx+1]` are consecutive in memory, but `database[db_idx, feat_idx]` and `database[db_idx+1, feat_idx]` are far apart (separated by the entire row width of 128 floats).
+While threads access the same `db_idx` at the same time, the memory layout of a row-major array means that `database[db_idx, feat_idx]` and `database[db_idx, feat_idx+1]` are consecutive in memory, but `database[db_idx, feat_idx]` and `database[db_idx+1, feat_idx]` are far apart due to the separation by the entire row width of 128 floats.
 ## Understanding Shared Memory
 
-Shared memory is a memory space accessible by all threads within a single thread block stored on L1 Data Cache of GPU's SM.
-
-In similarity search, we can use shared memory to:
-1. Store partial results from each thread
-2. Perform a parallel reduction to find the maximum similarity
-3. Avoid having all threads write to global memory repeatedly
-
+Shared memory is a memory space accessible by all threads within a single thread block stored on L1 Data Cache of GPU's Streaming Multiprocessor (SM). Through the usage of *shared memory*, the need for all threads to write to global  memory repeatedly can be avoided.
 ## The Optimized Implementation
 
-Now let's see how we can combine memory coalescing and shared memory to dramatically improve performance:
+Now let's see how we can combine memory coalescing and shared memory to improve performance:
 
 ```python
 import numpy as np
@@ -178,39 +166,37 @@ def similarity_search_true_coalesced(queries, database_T, results):
 ## Differences Between the Two Implementations
 
 ### 1. Thread Organization
-**Non-coalesced:**
+**First Implementation:**
 ```python
 query_idx = cuda.grid(1)  # Each thread = one query
 ```
 
-**Coalesced:**
+**Optimized Implementation:**
 ```python
 query_idx = cuda.blockIdx.x   # Each block = one query
 thread_idx = cuda.threadIdx.x  # Threads cooperate on one query
 ```
 
-In the optimized version, we use an entire block of threads (256 threads) to process a single query. This allows threads to divide the database vectors among themselves.
-
+In the optimized version, we use an entire block of threads to process a single query.
 ### 2. Work Distribution
-**Non-coalesced:**
+**First Implementation:**
 ```python
 for db_idx in range(n_db):  # Each thread processes all vectors
 ```
 
-**Coalesced:**
+**Optimized Implementation:**
 ```python
 for db_idx in range(thread_idx, n_db, block_size):  # Threads split the work
 ```
 
 Instead of each thread processing all database vectors, threads in a block divide them up. Thread 0 processes vectors 0, 256, 512, ..., while thread 1 processes 1, 257, 513, ..., and so on.
-
 ### 3. Memory Coalescing Implementation
-**Non-coalesced:**
+**First Implementation:**
 ```python
 database[db_idx, feat_idx]  # Shape: (n_vectors, dim)
 ```
 
-**Coalesced:**
+**Optimized Implementation:**
 ```python
 database_T[feat_idx, db_idx]  # Shape: (dim, n_vectors)
 ```
@@ -289,13 +275,15 @@ We can see improvement in the Coalesced + Shared Memory based on the time it too
 
 ![non-coalesced](/images/non-coalesced.jpg)
 
-Unallocated warps percentage can be seen to reach 80% in the non coalesced version. After distributing the workload and implementing said optimization techniques in the coalesced version, the warp slots available has been maximized in the SM up to >99%.
+Unallocated warps percentage can be seen to reach 80% in the first implementation. After distributing the workload and implementing said optimization techniques in the coalesced version, the warp slots available has been maximized in the SM up to >99%.
 ## Conclusion
 
 In this article, we demonstrated two GPU optimization techniques:
 
-1. **Memory Coalescing**: Organizing data and thread access patterns so that threads in a warp access consecutive memory locations, reducing the number of memory transactions by an order of magnitude.
+1. **Thread Organizing and Work Distribution**: Workload shift from one thread towards block of threads, which eliminates the serial nature of one thread-one query that becomes the bottleneck in demonstrated similarity search operation
 
-2. **Shared Memory**: Using fast, programmable on-chip memory for intermediate results and parallel algorithms like reduction, avoiding expensive global memory accesses.
+2. **Memory Coalescing**: Organizing data and thread access patterns done by the *thread* so that separated transactions of writing memory can be coalesced to one.
 
-These optimizations yielded an 1.64x speedup on the SIFT1M benchmark which can be beneficial for a production system processing millions of queries through cost savings and improved user experience. Understanding and applying these low-level optimizations becomes increasingly important as AI systems continue to scale,
+3. **Shared Memory**: Using a memory space that can be accessed by all threads in a block in order to avoid the need for threads to write to global memory repeatedly
+
+These optimizations yielded an 1.64x speedup on the SIFT1M benchmark which can be beneficial for a production system that also uses similarity search operations.
