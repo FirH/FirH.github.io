@@ -2,6 +2,57 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>http://localhost:1313/id/</loc>
+    <lastmod>2026-01-15T00:00:00+00:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="http://localhost:1313/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="id"
+                href="http://localhost:1313/id/"
+                />
+  </url><url>
+    <loc>http://localhost:1313/id/posts/accelerate-sim-search/</loc>
+    <lastmod>2026-01-15T00:00:00+00:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="http://localhost:1313/posts/accelerate-sim-search/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="id"
+                href="http://localhost:1313/id/posts/accelerate-sim-search/"
+                />
+  </url><url>
+    <loc>http://localhost:1313/id/posts/</loc>
+    <lastmod>2026-01-15T00:00:00+00:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="http://localhost:1313/posts/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="id"
+                href="http://localhost:1313/id/posts/"
+                />
+  </url><url>
+    <loc>http://localhost:1313/id/about/</loc>
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="http://localhost:1313/about/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="id"
+                href="http://localhost:1313/id/about/"
+                />
+  </url><url>
     <loc>http://localhost:1313/id/categories/</loc>
     <xhtml:link
                 rel="alternate"
@@ -12,18 +63,6 @@
                 rel="alternate"
                 hreflang="id"
                 href="http://localhost:1313/id/categories/"
-                />
-  </url><url>
-    <loc>http://localhost:1313/id/</loc>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="http://localhost:1313/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="id"
-                href="http://localhost:1313/id/"
                 />
   </url><url>
     <loc>http://localhost:1313/id/tags/</loc>

@@ -1,10 +1,8 @@
 +++
-date = '2026-01-02T08:50:21+07:00'
+date = '2026-01-15'
 draft = false
 title = 'Mempercepat Proses Similarity Search Melalui Distribusi Tugas, Memory Coalescing, dan Shared Memory'
 +++
-
-# Mempercepat Proses Similarity Search Melalui Distribusi Kerja, Memory Coalescing, dan Shared Memory
 
 ## Pendahuluan
 
@@ -99,7 +97,7 @@ Berikut merupakan contoh implementasi naif Memoy Coalescing:
 sim += queries[query_idx, feat_idx] * database[db_idx, feat_idx]
 ```
 
-Meskipun sejumlah *thread* mengakses `db_idx` di waktu yang sama, susunan *array* *row-major* dari memori berarti `database[db_idx, feat_idx]` dan `database[db_idx, feat_idx+1]` berurutan dari segi memori, namun `database[db_idx, feat_idx]` and `database[db_idx+1, feat_idx]` terpisah satu baris berukuran dengan jarak 128 data bertipe *float* 
+Meskipun sejumlah *thread* mengakses `db_idx` di waktu yang sama, susunan *array* *row-major* dari memori berarti `database[db_idx, feat_idx]` dan `database[db_idx, feat_idx+1]` berurutan dari segi memori, namun `database[db_idx, feat_idx]` and `database[db_idx+1, feat_idx]` terpisah cukup jauh dengan suatu baris berdimensi 128. 
 ## Apa itu Shared Memory?
 
 Shared memory adalah sebuah ruang memori yang dapat diakses oleh semua *thread* dalam satu blok *thread* yang disimpan pada L1 *Data Cache* dari Streaming Multiprocessor (SM) dari GPU. Penggunaan dari *shared memory* pada operasi seperti *similarity search* untuk menghindari keharusan dari semua *thread* untuk menulis hasil operasi ke memori *global* secara berulang
@@ -268,6 +266,7 @@ Hanya thread 0 yang menulis hasil akhir kembali ke global memory
 | -------------- | ---------- | ------------- | ------- |
 | Tanpa optimasi | 33500.43   | 299           | 1.0x    |
 | Teroptimasi    | 20475.88   | 488           | 1.64x   |
+
 Berikut merupakan perbandingan lebih detil ketika menggunakan NVIDIA Nsight Systems:
 
 ![coalesced](/images/coalesced.jpg)

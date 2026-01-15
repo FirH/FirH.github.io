@@ -4,6 +4,20 @@ title = "FirH's Blog"
 theme = "PaperMod"
 defaultContentLanguage = "en"
 
+[languages.en]
+  contentDir = "content/en"
+  languageCode = "en"
+  languageName = "English"
+
+[languages.id]
+  contentDir = "content/id"
+  languageCode = "id"
+  languageName = "Indonesian"
+
+[[menu.main]]
+  name = "About"
+  url = "/about/"
+
 [caches]
   [caches.images]
     dir = ':cacheDir/images'
@@ -15,3 +29,9 @@ target = 'static'
 [[module.mounts]]
 source = 'images'
 target = 'static/images'
+
+[params]
+
+[[params.socialIcons]]
+  name = "github"
+  url = "https://github.com/FirH"

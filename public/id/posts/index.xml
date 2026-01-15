@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
-    <title>FirH&#39;s Blog</title>
-    <link>http://localhost:1313/id/</link>
-    <description>Recent content on FirH&#39;s Blog</description>
+    <title>Posts on FirH&#39;s Blog</title>
+    <link>http://localhost:1313/id/posts/</link>
+    <description>Recent content in Posts on FirH&#39;s Blog</description>
     <generator>Hugo -- 0.152.2</generator>
     <language>id</language>
     <lastBuildDate>Thu, 15 Jan 2026 00:00:00 +0000</lastBuildDate>
-    <atom:link href="http://localhost:1313/id/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/id/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Mempercepat Proses Similarity Search Melalui Distribusi Tugas, Memory Coalescing, dan Shared Memory</title>
       <link>http://localhost:1313/id/posts/accelerate-sim-search/</link>
@@ -15,13 +15,6 @@
       <guid>http://localhost:1313/id/posts/accelerate-sim-search/</guid>
       <description>&lt;h2 id=&#34;pendahuluan&#34;&gt;Pendahuluan&lt;/h2&gt;
 &lt;p&gt;Similarity search adalah operasi mendasar seperti pada sistem pencarian yang kerap terdapat pada sistem di masa maraknya penggunaan Large Language Model (LLM) atau Retrieval Augmented Generation (RAG), seperti sistem pencarian informasi berbasis semantik, sistem rekomendasi, atau sebuah pipeline RAG. Operasi ini meliputi pencarian vektor dengan kemiripan paling tinggi pada sebuah basis data terhadap vektor masukan / kueri dari pengguna. Bagaimana jika basis data yang kita gunakan memiliki jutaan vektor? Performa menjadi salah pertimbangan penting dalam pembangunan sistem ini.&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>About</title>
-      <link>http://localhost:1313/id/about/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/id/about/</guid>
-      <description></description>
     </item>
   </channel>
 </rss>

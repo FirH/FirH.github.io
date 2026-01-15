@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
-    <title>FirH&#39;s Blog</title>
-    <link>http://localhost:1313/</link>
-    <description>Recent content on FirH&#39;s Blog</description>
+    <title>Posts on FirH&#39;s Blog</title>
+    <link>http://localhost:1313/posts/</link>
+    <description>Recent content in Posts on FirH&#39;s Blog</description>
     <generator>Hugo -- 0.152.2</generator>
     <language>en</language>
     <lastBuildDate>Thu, 15 Jan 2026 00:00:00 +0000</lastBuildDate>
-    <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Accelerating Similarity Search with Work Distribution, Memory Coalescing, and Shared Memory</title>
       <link>http://localhost:1313/posts/accelerate-sim-search/</link>
@@ -16,13 +16,6 @@
       <description>&lt;h2 id=&#34;introduction&#34;&gt;Introduction&lt;/h2&gt;
 &lt;p&gt;In the age of large language models and retrieval-augmented generation (RAG), similarity search has become a fundamental operation. Whether you&amp;rsquo;re building a semantic search engine, a recommendation system, or a RAG pipeline, you&amp;rsquo;ll often need to find the most similar vectors from a large database given a query vector. But what happens when your database contains millions of vectors? Performance becomes critical in building these systems.&lt;/p&gt;
 &lt;p&gt;In this article, i will demonsrate how GPU optimization techniques such as work distribution, memory coalescing, and shared memory accelerate similarity search operations. We&amp;rsquo;ll walk through CUDA implementations, demonstrate the performance gains, and explain exactly why these optimizations work.&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>About</title>
-      <link>http://localhost:1313/about/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/about/</guid>
-      <description></description>
     </item>
   </channel>
 </rss>

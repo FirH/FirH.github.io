@@ -126,8 +126,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "345f995b992c5eaf",
@@ -234,6 +233,11 @@
   },
   "active": "3882e178de4aea9f",
   "lastOpenFiles": [
+    "en/about.md.tmp.563508.1768471811990",
+    "id/about.md",
+    "en/about.md",
+    "about.md",
+    "en/abou.md",
     "id/posts/accelerate-sim-search.md",
     "en/posts/accelerate-sim-search.md",
     "id/posts/accelerate sim-search-ai-translated.md",

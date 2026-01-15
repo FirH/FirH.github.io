@@ -1,10 +1,8 @@
 +++
-date = '2026-01-02T08:50:21+07:00'
+date = '2026-01-15'
 draft = false
 title = 'Accelerating Similarity Search with Work Distribution, Memory Coalescing, and Shared Memory'
 +++
-
-# Accelerating Similarity Search with Work Distribution, Memory Coalescing, and Shared Memory
 
 ## Introduction
 
@@ -101,7 +99,7 @@ Let's take a look at this line in the naive implementation:
 sim += queries[query_idx, feat_idx] * database[db_idx, feat_idx]
 ```
 
-While threads access the same `db_idx` at the same time, the memory layout of a row-major array means that `database[db_idx, feat_idx]` and `database[db_idx, feat_idx+1]` are consecutive in memory, but `database[db_idx, feat_idx]` and `database[db_idx+1, feat_idx]` are far apart due to the separation by the entire row width of 128 floats.
+While threads access the same `db_idx` at the same time, the memory layout of a row-major array means that `database[db_idx, feat_idx]` and `database[db_idx, feat_idx+1]` are consecutive in memory, but `database[db_idx, feat_idx]` and `database[db_idx+1, feat_idx]` are far apart due to the separation by an entire row with 128 dimension.
 ## Understanding Shared Memory
 
 Shared memory is a memory space accessible by all threads within a single thread block stored on L1 Data Cache of GPU's Streaming Multiprocessor (SM). Through the usage of *shared memory*, the need for all threads to write to global  memory repeatedly can be avoided.
